@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace SharpGuard
 {
@@ -43,59 +41,62 @@ namespace SharpGuard
 
         public override bool Execute(string[] args)
         {
-            // header...
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.Write("+---------------+ ");
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write("CLI Help Menu");
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine(" +---------------+");
-            Console.WriteLine();
-
-            // show help for each cmd...
-            foreach (var handler in CommandHandlers)
+            lock (Logger.locker)
             {
+                // header...
                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.Write(" \xbb ");
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write(handler.Name);
+                Console.Write("+---------------+ ");
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write("CLI Help Menu");
                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.WriteLine(":");
+                Console.WriteLine(" +---------------+");
+                Console.WriteLine();
 
-                Console.Write("    :: Description: ");
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(handler.Description);
-
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.Write("    :: Aliases: ");
-                Console.ForegroundColor = ConsoleColor.White;
-                foreach (var alias in handler.Aliases)
+                // show help for each cmd...
+                foreach (var handler in CommandHandlers)
                 {
-                    Console.Write(alias);
                     Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.Write("; ");
+                    Console.Write(" \xbb ");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write(handler.Name);
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.WriteLine(":");
+
+                    Console.Write("    :: Description: ");
                     Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine(handler.Description);
+
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.Write("    :: Aliases: ");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    foreach (var alias in handler.Aliases)
+                    {
+                        Console.Write(alias);
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        Console.Write("; ");
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
+                    Console.WriteLine();
+
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.Write("    :: Usage: ");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine(handler.Usage);
+
+                    Console.WriteLine();
                 }
-                Console.WriteLine();
 
+                // footer...
+                // let's pretend this is paginated for now - also an excuse
+                // to write something different in the footer
                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.Write("    :: Usage: ");
+                Console.Write("+----------------+ ");
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write("Page 1 of 1");
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine(" +----------------+");
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(handler.Usage);
-
-                Console.WriteLine();
             }
-
-            // footer...
-            // let's pretend this is paginated for now - also an excuse
-            // to write something different in the footer
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.Write("+----------------+ ");
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write("Page 1 of 1");
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine(" +----------------+");
-            Console.ForegroundColor = ConsoleColor.White;
 
             // ret false - not exiting CLI
             return false;
@@ -146,9 +147,12 @@ namespace SharpGuard
         private static string[] ReadCommandWithArgs()
         {
             Logger.WriteInfo("Main Menu", "Awaiting command... (use 'h' for help)");
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.Write(" % ");
-            Console.ForegroundColor = ConsoleColor.Blue;
+            lock (Logger.locker)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.Write(" % ");
+                Console.ForegroundColor = ConsoleColor.Blue;
+            }
             var cmd = Console.ReadLine() ?? "";
             Console.ForegroundColor = ConsoleColor.White;
             cmd = cmd.Trim();
@@ -197,102 +201,5 @@ namespace SharpGuard
         Detections,
         Detections_Seatbelt_FileInfo,
         Uncategorised
-    }
-
-    public class Logger
-    {
-        private BlockingCollection<Param> bc = new();
-
-        public ConcurrentBag<DebugCategory> EnabledDebugCategories { get; private set; } = new() {
-            DebugCategory.FileWatching,
-            DebugCategory.Detections,
-            DebugCategory.Detections_Seatbelt_FileInfo,
-            DebugCategory.Uncategorised
-        };
-
-        public Logger()
-        {
-            Task.Factory.StartNew(() =>
-            {
-                foreach (var param in bc.GetConsumingEnumerable())
-                {
-                    switch (param.Type)
-                    {
-                        case "INFO":
-                            WriteInfo(param.Prefix, param.Msg!!, param.Endl);
-                            break;
-                        case "WARN":
-                            WriteWarn(param.Prefix, param.Msg!!, param.Endl);
-                            break;
-                        case "ERR":
-                            WriteErr(param.Prefix, param.Msg!!, param.Endl);
-                            break;
-                        case "D":
-                            WriteDebug(param.DebugCategory, param.Prefix, param.DebugMsg, param.Endl);
-                            break;
-                        default:
-                            WriteErr("Invalid Log Params", param.ToString(), param.Endl);
-                            break;
-                    }
-                }
-            });
-        }
-
-        ~Logger()
-        {
-            bc.CompleteAdding();
-        }
-
-        public void WriteInfo(string prefix, string msg, bool endl = true)
-        {
-            WriteLine("INFO", ConsoleColor.Blue, prefix, msg, endl);
-        }
-
-        public void WriteWarn(string prefix, string msg, bool endl = true)
-        {
-            WriteLine("WARN", ConsoleColor.Yellow, prefix, msg, endl);
-        }
-
-        public void WriteErr(string prefix, string msg, bool endl = true)
-        {
-            WriteLine("ERR", ConsoleColor.Red, prefix, msg, endl);
-        }
-
-        public void WriteDebug(DebugCategory category, string prefix, Func<string> msg, bool endl = true)
-        {
-            if (!EnabledDebugCategories.Contains(category))
-            {
-                return;
-            }
-
-            var categoryToStr = Enum.GetName(category.GetType(), category) ?? "Unknown";
-
-            WriteLine("D", (ConsoleColor) (((int) category) % 14) + 1, categoryToStr + " " + prefix, msg.Invoke(), endl, prefixColor: ConsoleColor.DarkGray, msgColor: ConsoleColor.DarkGray);
-        }
-
-        private void WriteLine(string levelPrefix, ConsoleColor levelColour, string msgPrefix, string msg, bool endl = true, ConsoleColor prefixColor = ConsoleColor.Blue, ConsoleColor msgColor = ConsoleColor.White)
-        {
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.Write("[" + DateTime.Now.ToShortTimeString() + " ");
-            Console.ForegroundColor = levelColour;
-            Console.Write(levelPrefix);
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.Write("] [");
-            Console.ForegroundColor = prefixColor;
-            Console.Write(msgPrefix);
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.Write("]: ");
-            Console.ForegroundColor = msgColor;
-
-            if (endl)
-            {
-                Console.WriteLine(msg);
-            }
-            else
-            {
-                Console.Write(msg);
-            }
-            Console.ForegroundColor = ConsoleColor.White;
-        }
     }
 }
