@@ -17,11 +17,12 @@ namespace SharpGuard
         private readonly LinkedList<Detection> detections = new();
         private LinkedList<Detection> Detections => detections;
 
-        private WinEventHandler EventHandler { get; init; } = new();
-        private CLI GuardCLI { get; init; } = new();
+        public WinEventHandler EventHandler { get; init; } = new();
+        public CLI GuardCLI { get; init; }
 
         public SharpGuard()
         {
+            GuardCLI = new(this);
             Detections.AddLast(new Detection_Seatbelt_FileInfo(di => OnDetect(di), EventHandler));
         }
 

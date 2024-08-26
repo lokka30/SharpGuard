@@ -32,9 +32,9 @@ namespace SharpGuard
             eventLog.Source = "SharpGuard";
         }
 
-        public void WriteEvent(string text, EventLogEntryType type, int eventID, short catID)
+        public void WriteEvent(string text, EventLogEntryType type, EventID eventID, CategoryID catID)
         {
-            eventLog.WriteEntry(text, type, eventID, catID);
+            eventLog.WriteEntry(text, type, (int) eventID, (short) catID);
         }
     }
 

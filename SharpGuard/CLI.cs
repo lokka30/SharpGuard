@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 
 namespace SharpGuard
 {
+    [SupportedOSPlatform("windows")]
     public abstract class Command
     {
         public string Name { get; init; }
@@ -25,12 +27,13 @@ namespace SharpGuard
         public abstract bool Execute(string[] args);
     }
 
+    [SupportedOSPlatform("windows")]
     class HelpCommand : Command
     {
-        private static readonly string name = "help";
+        private static readonly string name = "Help Menu";
         private static readonly string description = "Show help for available commands.";
         private static readonly string[] aliases = { "help", "h", "man", "manual" };
-        private static readonly string usage = "help";
+        private static readonly string usage = aliases.First();
 
         private LinkedList<Command> CommandHandlers { get; init; }
 
@@ -103,12 +106,13 @@ namespace SharpGuard
         }
     }
 
+    [SupportedOSPlatform("windows")]
     class ExitCommand : Command
     {
-        private static readonly string name = "exit";
-        private static readonly string description = "Exit the program.";
+        private static readonly string name = "Exit Program";
+        private static readonly string description = "Exits the program.";
         private static readonly string[] aliases = { "exit", "ex", "quit", "q" };
-        private static readonly string usage = "exit";
+        private static readonly string usage = aliases.First();
 
         public ExitCommand() : base(name, description, aliases, usage)
         {
@@ -121,15 +125,42 @@ namespace SharpGuard
         }
     }
 
-    public class CLI
+    [SupportedOSPlatform("windows")]
+    class DebugWriteTestEventCommand : Command
+    {
+        private static readonly string name = "(Debugging) Write Test Event";
+        private static readonly string description = "Writes a test event to the Windows event log.";
+        private static readonly string[] aliases = { "debug-write-test-event" };
+        private static readonly string usage = aliases.First();
+        private SharpGuard SG { get; init; }
+
+        public DebugWriteTestEventCommand(SharpGuard sg) : base(name, description, aliases, usage)
+        {
+            SG = sg;
+        }
+
+        public override bool Execute(string[] args)
+        {
+            Logger.WriteInfo("DebugWriteTestEvent", "Writing test event...");
+            SG.EventHandler.WriteEvent($"This\nis\na\ntest\nevent\nDateTime: {DateTime.Now}", System.Diagnostics.EventLogEntryType.Information, 0, 0);
+            Logger.WriteInfo("DebugWriteTestEvent", "Completed.");
+            return false;
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
+    class CLI
     {
         public LinkedList<Command> CommandHandlers { get; init; } = new();
         public bool IsVerbose { get; set; } = false;
+        private SharpGuard SG { get; init; }
 
-        public CLI()
+        public CLI(SharpGuard sg)
         {
+            SG = sg;
             CommandHandlers.AddLast(new ExitCommand());
             CommandHandlers.AddLast(new HelpCommand(CommandHandlers));
+            CommandHandlers.AddLast(new DebugWriteTestEventCommand(SG));
         }
 
         public void Initialize(string appDetails)
@@ -202,4 +233,5 @@ namespace SharpGuard
         Detections_Seatbelt_FileInfo,
         Uncategorised
     }
+
 }

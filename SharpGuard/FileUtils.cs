@@ -21,9 +21,7 @@ namespace SharpGuard
                 Type = type;
                 Sender = sender;
                 Descr = descr;
-
-                int fileName_IndexOfBackslash = fileName.IndexOf('\\');
-                FileName = fileName_IndexOfBackslash == -1 ? fileName : fileName[fileName_IndexOfBackslash..];
+                FileName = fileName[(fileName.IndexOf('\\') + 1)..];
             }
 
             public FileEventType Type { get; init; }

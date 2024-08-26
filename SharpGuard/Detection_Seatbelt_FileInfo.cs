@@ -31,8 +31,8 @@ namespace SharpGuard
         }; // file names of interest inside 'C:\Windows\System32' or it's subdirectories.
         public static readonly int millisPerBatch = 10_000; // time between batches being separated, milliseconds
         public static readonly int millisPerCheck = 05_000; // time between scheduled checks, milliseconds
-        public static readonly int timeKeyLowerBound = -6; // lower bound for the time key; time keys lower than this are discarded
-        public static readonly int countTriggerBound = fileNames.Length - 3; // count # required to trigger alert
+        public static readonly int timeKeyLowerBound = -2; // lower bound for the time key; time keys lower than this are discarded
+        public static readonly int countTriggerBound = (int) Math.Round(fileNames.Length * 0.35); // count # required to trigger alert
 
         private bool Enabled { get; set; } = false; // This keeps track if the detection has attempted to have been started twice in a row
 
@@ -45,13 +45,13 @@ namespace SharpGuard
          */
         private ConcurrentDictionary<string, ConcurrentDictionary<int, int>> AccFreqMap { get; init; } = new();
 
-        // every 30 seconds, remove any old time key entries, and make each existing time key entry older.
+        // every X seconds, remove any old time key entries, and make each existing time key entry older.
         private Timer? AccFreqMapUpdateTask { get; set; } = null;
 
-        // every 5 seconds, check all keys to see if all counts are suspicious
+        // every X seconds, check all keys to see if all counts are suspicious
         private Timer? MaliciousCheckerTask { get; set; } = null;
 
-        private string DescribeAccFreqMap()
+        public string DescribeAccFreqMap()
         {
             try
             {
@@ -59,20 +59,22 @@ namespace SharpGuard
                 {
                     StringBuilder sb = new("Access Frequency Map Overview:\n");
                     sb.Append(Enumerable.Repeat('-', 30));
-                    sb.Append("\nFormat: File Name - Batch age (mins) - Count\n");
+                    sb.Append("\nFormat: File Name - Batch ID - Batch age (mins) - Count\n");
 
                     foreach (var fileName in AccFreqMap.Keys)
                     {
                         var batchAgeToCount = AccFreqMap[fileName];
                         foreach (var batchAge in batchAgeToCount.Keys.Order())
                         {
-                            sb.Append(" - ");
+                            sb.Append(" -> ");
                             sb.Append(fileName);
-                            sb.Append(" - ");
-                            sb.Append(batchAge == 0 ? 0f : batchAge * -millisPerBatch / (60_000)); // batch age in minutes
-                            sb.Append("m - ");
+                            sb.Append(": ID#");
+                            sb.Append(batchAge);
+                            sb.Append(", ");
+                            sb.Append(Math.Round(batchAge == 0 ? 0f : batchAge * -millisPerBatch / (60_000), 2)); // batch age in minutes
+                            sb.Append("mins, ");
                             sb.Append(batchAgeToCount[batchAge]); // count
-                            sb.Append(" matches\n");
+                            sb.Append(" matches.\n");
                         }
                     }
 
@@ -290,8 +292,8 @@ namespace SharpGuard
 
         private void WriteEvent(DetectionInfo dinfo)
         {
-            int eventID = (int)EventID.DETECTION_SEATBELT_FILEINFO;
-            short catID = (short)CategoryID.DETECTIONS;
+            var eventID = EventID.DETECTION_SEATBELT_FILEINFO;
+            var catID = CategoryID.DETECTIONS;
             EventHandler.WriteEvent(dinfo.ToReadableString(), System.Diagnostics.EventLogEntryType.Warning, eventID, catID);
         }
     }
