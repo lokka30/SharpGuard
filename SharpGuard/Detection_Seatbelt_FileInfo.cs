@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
@@ -123,7 +122,7 @@ namespace SharpGuard
         private void InitialiseAccFreqMap()
         {
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "InitialiseAccFreqMap", () => "Method called...");
-            lock(AccFreqMap)
+            lock (AccFreqMap)
             {
                 foreach (var fileName in fileNames)
                 {
@@ -161,7 +160,7 @@ namespace SharpGuard
         {
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "HandleAccFreqMapUpdate", () => "Method called...");
 
-            lock(AccFreqMap)
+            lock (AccFreqMap)
             {
                 foreach (var key in AccFreqMap.Keys)
                 {
@@ -235,7 +234,7 @@ namespace SharpGuard
                 return;
             }
 
-            lock(AccFreqMap)
+            lock (AccFreqMap)
             {
                 var countByTime = AccFreqMap[wfe.FileName];
                 var cbt = countByTime[0] + 1;
@@ -249,7 +248,7 @@ namespace SharpGuard
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "HandleMaliciousChecker", () => "Method called...");
             var fileNamesWithWatchedEvent = new LinkedList<string>();
 
-            lock(AccFreqMap)
+            lock (AccFreqMap)
             {
                 foreach (var fileName in AccFreqMap.Keys)
                 {
@@ -273,7 +272,7 @@ namespace SharpGuard
                 }
             }
 
-            lock(AccFreqMap)
+            lock (AccFreqMap)
             {
                 if (fileNamesWithWatchedEvent.Count >= countTriggerBound)
                 {
@@ -291,8 +290,8 @@ namespace SharpGuard
 
         private void WriteEvent(DetectionInfo dinfo)
         {
-            int eventID = (int) EventID.DETECTION_SEATBELT_FILEINFO;
-            short catID = (short) CategoryID.DETECTIONS;
+            int eventID = (int)EventID.DETECTION_SEATBELT_FILEINFO;
+            short catID = (short)CategoryID.DETECTIONS;
             EventHandler.WriteEvent(dinfo.ToReadableString(), System.Diagnostics.EventLogEntryType.Warning, eventID, catID);
         }
     }

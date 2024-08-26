@@ -9,7 +9,7 @@ namespace SharpGuard
             OnDetectHook = onDetectHook;
             EventHandler = eventHandler;
         }
-        
+
         protected WinEventHandler EventHandler { get; init; }
         internal Action<DetectionInfo> OnDetectHook { get; init; }
 
