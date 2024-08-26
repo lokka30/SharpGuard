@@ -19,7 +19,7 @@ namespace SharpGuard
 
         protected void OnDetect(DetectionInfo dinfo)
         {
-            Logger.WriteDebug(DebugCategory.Detections, "Detection.OnDetect", () => "Abstract method called, object: " + dinfo);
+            Logger.WriteDebug(DebugCategory.Detections, "Detection.OnDetect", () => "Abstract method called.");
             OnDetectHook.Invoke(dinfo);
         }
     }

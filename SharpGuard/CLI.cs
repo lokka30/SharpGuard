@@ -177,7 +177,7 @@ namespace SharpGuard
 
         private static string[] ReadCommandWithArgs()
         {
-            Logger.WriteInfo("Main Menu", "Awaiting command... (use 'h' for help)");
+            Logger.WriteInfo("Main Menu", "Awaiting command... (use 'help' for help)");
             lock (Logger.locker)
             {
                 Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -191,7 +191,7 @@ namespace SharpGuard
             return cmd.Split(" ");
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Pending>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<thinking about it...>")]
         private static void Pause()
         {
             Logger.WriteInfo("!", "Press [ENTER] to continue...", false);
@@ -203,6 +203,12 @@ namespace SharpGuard
         private bool ProcessCommand(string[] cmdWithArgs)
         {
             var cmd = cmdWithArgs[0].ToLower();
+
+            if(cmd.Length == 0)
+            {
+                Logger.WriteErr("Main Menu", "Please enter a command. For help, type 'help'.");
+                return false;
+            }
 
             foreach (var handler in CommandHandlers)
             {
@@ -221,7 +227,7 @@ namespace SharpGuard
                 }
             }
 
-            Logger.WriteInfo("Main Menu", "Unrecognised command, please try again. For help, type 'help'.");
+            Logger.WriteErr("Main Menu", "Unrecognised command, please try again. For help, type 'help'.");
             return false;
         }
     }

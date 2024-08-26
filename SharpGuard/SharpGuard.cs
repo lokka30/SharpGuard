@@ -61,7 +61,7 @@ namespace SharpGuard
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
         void OnDetect(DetectionInfo dinfo)
         {
-            Logger.WriteWarn("OnDetect", $"Detection received! Object: {dinfo}");
+            Logger.WriteWarn("OnDetect", $"Detection received! Details:\n{dinfo.ToReadableString()}");
         }
     }
 }

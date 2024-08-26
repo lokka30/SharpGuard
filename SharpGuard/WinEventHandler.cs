@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Runtime.Versioning;
 
 namespace SharpGuard
@@ -34,7 +35,14 @@ namespace SharpGuard
 
         public void WriteEvent(string text, EventLogEntryType type, EventID eventID, CategoryID catID)
         {
-            eventLog.WriteEntry(text, type, (int) eventID, (short) catID);
+            try
+            {
+                eventLog.WriteEntry(text, type, (int)eventID, (short)catID);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteErr("WriteEvent", $"Caught exception {ex.Message}; Stack Trace: {ex.StackTrace ?? "N/A"}");
+            }
         }
     }
 

@@ -21,7 +21,7 @@ namespace SharpGuard
                 Type = type;
                 Sender = sender;
                 Descr = descr;
-                FileName = fileName[(fileName.IndexOf('\\') + 1)..];
+                FileName = fileName[(fileName.IndexOf('\\') + 1)..]; // NOTE: This can include uppercase and lowercase characters!
             }
 
             public FileEventType Type { get; init; }
