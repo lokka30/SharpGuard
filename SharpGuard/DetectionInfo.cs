@@ -1,4 +1,6 @@
-﻿namespace SharpGuard
+﻿using System;
+
+namespace SharpGuard
 {
     internal class DetectionInfo
     {
@@ -16,6 +18,12 @@
         public override string ToString()
         {
             return "{'Category': " + Category + ", 'ShortDesc': '" + ShortDesc + "', 'FullDesc': '" + FullDesc + "'}";
+        }
+
+        public string ToReadableString()
+        {
+            var CategoryName = Enum.GetName(typeof(DetectionCategory), Category);
+            return $"Detection Info\n--------------\nCategory: \t{CategoryName}\nShort Desc: \t{ShortDesc}\nFull Desc: \t{FullDesc}";
         }
     }
 }

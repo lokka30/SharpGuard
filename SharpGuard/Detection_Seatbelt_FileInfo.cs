@@ -3,21 +3,17 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Runtime.Versioning;
+using System.Text;
 using System.Threading;
 
 namespace SharpGuard
 {
+    [SupportedOSPlatform("windows")]
     internal class Detection_Seatbelt_FileInfo : Detection
     {
-        // const int MILLIS_PER_BATCH = 2_000; // TESTING ONLY
-        const int MILLIS_PER_BATCH = 30_000;
-        // const int MILLIS_PER_CHECK = 1_000; // TESTING ONLY
-        const int MILLIS_PER_CHECK = 5_000;
-        const int TIME_KEY_LIMIT = -6;
-        const int TRIGGER_COUNT = 1; // TESTING ONLY
-        // const int TRIGGER_COUNT = 1; // 10 to 14 recommended
-
-        public string[] FileNames { get; } = {
+        public static readonly string[] fileNames = {
             "coremessaging.dll",
             "afd.sys",
             "mrxdav.sys",
@@ -33,7 +29,13 @@ namespace SharpGuard
             "win32kfull.sys",
             "winload.exe",
             "winsrv.dll"
-        };
+        }; // file names of interest inside 'C:\Windows\System32' or it's subdirectories.
+        public static readonly int millisPerBatch = 10_000; // time between batches being separated, milliseconds
+        public static readonly int millisPerCheck = 05_000; // time between scheduled checks, milliseconds
+        public static readonly int timeKeyLowerBound = -6; // lower bound for the time key; time keys lower than this are discarded
+        public static readonly int countTriggerBound = fileNames.Length - 3; // count # required to trigger alert
+
+        private bool Enabled { get; set; } = false; // This keeps track if the detection has attempted to have been started twice in a row
 
         private LinkedList<FileSystemWatcher> Watchers { get; init; } = new();
 
@@ -50,13 +52,55 @@ namespace SharpGuard
         // every 5 seconds, check all keys to see if all counts are suspicious
         private Timer? MaliciousCheckerTask { get; set; } = null;
 
-        public Detection_Seatbelt_FileInfo(Action<DetectionInfo> onDetectHook) : base(onDetectHook)
+        private string DescribeAccFreqMap()
+        {
+            try
+            {
+                lock (AccFreqMap)
+                {
+                    StringBuilder sb = new("Access Frequency Map Overview:\n");
+                    sb.Append(Enumerable.Repeat('-', 30));
+                    sb.Append("\nFormat: File Name - Batch age (mins) - Count\n");
+
+                    foreach (var fileName in AccFreqMap.Keys)
+                    {
+                        var batchAgeToCount = AccFreqMap[fileName];
+                        foreach (var batchAge in batchAgeToCount.Keys.Order())
+                        {
+                            sb.Append(" - ");
+                            sb.Append(fileName);
+                            sb.Append(" - ");
+                            sb.Append(batchAge == 0 ? 0f : batchAge * -millisPerBatch / (60_000)); // batch age in minutes
+                            sb.Append("m - ");
+                            sb.Append(batchAgeToCount[batchAge]); // count
+                            sb.Append(" matches\n");
+                        }
+                    }
+
+                    return sb.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteErr("Detection_Seatbelt_FileInfo", $"Caught exception: {ex.Message}; Stack Trace:\n{ex.StackTrace ?? "N/A"}");
+                return $"Unable to describe acc freq map: {ex.Message}";
+            }
+        }
+
+        public Detection_Seatbelt_FileInfo(Action<DetectionInfo> onDetectHook, WinEventHandler eventHandler) : base(onDetectHook, eventHandler)
         {
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "Class", () => "Object initialized");
         }
 
-        public override void Start()
+        public override void Start(WinEventHandler eventHandler)
         {
+            Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "Start", () => "Starting detection...");
+
+            if (Enabled)
+            {
+                throw new InvalidOperationException("Detection is already enabled");
+            }
+
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "Start", () => "Initializing detection...");
 
             try
@@ -72,6 +116,7 @@ namespace SharpGuard
                 throw;
             }
 
+            Enabled = true;
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "Start", () => "Detection initialized.");
         }
 
@@ -80,7 +125,7 @@ namespace SharpGuard
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "InitialiseAccFreqMap", () => "Method called...");
             lock(AccFreqMap)
             {
-                foreach (var fileName in FileNames)
+                foreach (var fileName in fileNames)
                 {
                     var countByTimeMap = new ConcurrentDictionary<int, int>();
                     countByTimeMap.TryAdd(0, 0);
@@ -100,14 +145,14 @@ namespace SharpGuard
                 callback: o => HandleAccFreqMapUpdate(),
                 state: null,
                 dueTime: 0,
-                period: MILLIS_PER_BATCH); // millis
+                period: millisPerBatch); // millis
 
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "StartTimers", () => "Initializing MaliciousCheckerTask...");
             MaliciousCheckerTask = new Timer(
                 callback: o => HandleMaliciousChecker(),
                 state: null,
                 dueTime: 0,
-                period: MILLIS_PER_CHECK); // millis
+                period: millisPerCheck); // millis
 
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "StartTimers", () => "Initialized all timers.");
         }
@@ -123,7 +168,7 @@ namespace SharpGuard
                     var accFreq = AccFreqMap[key];
                     foreach (var timeKey in accFreq.Keys.ToArray().OrderDescending())
                     {
-                        if (timeKey < TIME_KEY_LIMIT)
+                        if (timeKey < timeKeyLowerBound)
                         {
                             accFreq.TryRemove(timeKey, out int _);
                             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "HandleAccFreqMapUpdate", () => "TryRemove timeKey=" + timeKey);
@@ -143,7 +188,7 @@ namespace SharpGuard
         private void StartWatchers()
         {
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "StartWatchers", () => "Method called...");
-            foreach (var fileName in FileNames)
+            foreach (var fileName in fileNames)
             {
                 Watchers.AddLast(
                     FileUtils.Watch(@"C:\Windows\System32", fileName, wfe => Handle(wfe))
@@ -152,11 +197,14 @@ namespace SharpGuard
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "StartWatchers", () => "Method complete.");
         }
 
+        // Intended behaviour here is that the 'Enabled' state is ignored, in case an exception happens and SharpGuard wants to make
+        // sure everything has been cleaned up using the Stop method.
         public override void Stop()
         {
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "Stop", () => "Stopping detection...");
             DisposeWatchers();
             DisposeTasks();
+            Enabled = false;
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "Stop", () => "Stopped detection.");
         }
 
@@ -227,14 +275,25 @@ namespace SharpGuard
 
             lock(AccFreqMap)
             {
-                if (fileNamesWithWatchedEvent.Count >= TRIGGER_COUNT)
+                if (fileNamesWithWatchedEvent.Count >= countTriggerBound)
                 {
                     Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "HandleMaliciousChecker", () => $"High number of watched events, triggering detection!");
-                    OnDetect(new DetectionInfo(DetectionCategory.SEATBELT_FILEINFO, "tbd", AccFreqMap.ToString() ?? "N/A"));
+                    string shortDesc = $"Possible use of Seatbelt detected on this system judgying by file access patterns. Trigger count is {countTriggerBound}; matched {fileNamesWithWatchedEvent.Count} of {fileNames.Length} associated file names).";
+                    string longDesc = DescribeAccFreqMap();
+                    DetectionInfo dinfo = new(DetectionCategory.SEATBELT_FILEINFO, shortDesc, longDesc);
+                    OnDetect(dinfo);
+                    WriteEvent(dinfo);
                 }
             }
 
             Logger.WriteDebug(DebugCategory.Detections_Seatbelt_FileInfo, "HandleMaliciousChecker", () => "Method complete.");
+        }
+
+        private void WriteEvent(DetectionInfo dinfo)
+        {
+            int eventID = (int) EventID.DETECTION_SEATBELT_FILEINFO;
+            short catID = (short) CategoryID.DETECTIONS;
+            EventHandler.WriteEvent(dinfo.ToReadableString(), System.Diagnostics.EventLogEntryType.Warning, eventID, catID);
         }
     }
 }

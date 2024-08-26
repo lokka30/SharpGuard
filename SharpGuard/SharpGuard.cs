@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.Versioning;
 
 namespace SharpGuard
 {
+    [SupportedOSPlatform("windows")]
     internal class SharpGuard
     {
 
@@ -15,15 +17,17 @@ namespace SharpGuard
         private readonly LinkedList<Detection> detections = new();
         private LinkedList<Detection> Detections => detections;
 
+        private WinEventHandler EventHandler { get; init; } = new();
         private CLI GuardCLI { get; init; } = new();
 
         public SharpGuard()
         {
-            Detections.AddLast(new Detection_Seatbelt_FileInfo(di => OnDetect(di)));
+            Detections.AddLast(new Detection_Seatbelt_FileInfo(di => OnDetect(di), EventHandler));
         }
 
         void Start()
         {
+            EventHandler.Initialize();
             StartDetections();
             GuardCLI.Initialize("SharpGuard v0.1");
         }
@@ -38,7 +42,7 @@ namespace SharpGuard
             Logger.WriteDebug(DebugCategory.Detections, "StartDetections", () => "Starting detections...");
             foreach (var dec in Detections)
             {
-                dec.Start();
+                dec.Start(EventHandler);
             }
             Logger.WriteDebug(DebugCategory.Detections, "StartDetections", () => $"Started {Detections.Count} detections.");
         }

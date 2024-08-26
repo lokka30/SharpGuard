@@ -32,5 +32,9 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.EventLog" Version="8.0.0" />
+  </ItemGroup>
 
 </Project>

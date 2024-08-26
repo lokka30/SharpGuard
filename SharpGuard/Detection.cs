@@ -4,11 +4,16 @@ namespace SharpGuard
 {
     internal abstract class Detection
     {
-        public Detection(Action<DetectionInfo> onDetectHook) => OnDetectHook = onDetectHook;
-
+        public Detection(Action<DetectionInfo> onDetectHook, WinEventHandler eventHandler)
+        {
+            OnDetectHook = onDetectHook;
+            EventHandler = eventHandler;
+        }
+        
+        protected WinEventHandler EventHandler { get; init; }
         internal Action<DetectionInfo> OnDetectHook { get; init; }
 
-        public abstract void Start();
+        public abstract void Start(WinEventHandler eventHandler);
 
         public abstract void Stop();
 
