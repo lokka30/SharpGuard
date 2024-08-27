@@ -35,7 +35,7 @@ namespace SharpGuard
         public static readonly int millisPerBatch = 10_000; // time between batches being separated, milliseconds
         public static readonly int millisPerCheck = 05_000; // time between scheduled checks, milliseconds
         public static readonly int timeKeyLowerBound = -2; // lower bound for the time key; time keys lower than this are discarded
-        public static readonly int countTriggerBound = 4; // count # required to trigger alert
+        public static readonly int countTriggerBound = 7; // count # required to trigger alert
 
         private bool Enabled { get; set; } = false; // This keeps track if the detection has attempted to have been started twice in a row
 
@@ -61,7 +61,7 @@ namespace SharpGuard
                 lock (AccFreqMap)
                 {
                     StringBuilder sb = new("Access Frequency Map Overview:\n");
-                    sb.Append(new string('-', 30));
+                    sb.Append($"{new string('-', 30)}\n");
                     sb.Append(String.Format(DESCRIBED_TABLE_FMT, "File Name", "Batch ID", "Age", "Count"));
                     sb.Append(String.Format(DESCRIBED_TABLE_FMT, new string('-', 24), new string('-', 8), new string('-', 10), new string('-', 8)));
 
@@ -181,12 +181,19 @@ namespace SharpGuard
                             if (timeKey < timeKeyLowerBound)
                             {
                                 accFreq.TryRemove(timeKey, out int _);
-                                Logger.WriteDebug(DebugCategory.DETECTIONS_SEATBELT_FILEINFO, "HandleAccFreqMapUpdate", () => $"TryRemove timeKey={timeKey}");
+                                Logger.WriteDebug(DebugCategory.DETECTIONS_SEATBELT_FILEINFO, "HandleAccFreqMapUpdate", () => $"TryRemove timeKey={timeKey}.");
                             }
                             else
                             {
                                 accFreq[timeKey - 1] = accFreq[timeKey];
-                                Logger.WriteDebug(DebugCategory.DETECTIONS_SEATBELT_FILEINFO, "HandleAccFreqMapUpdate", () => $"Drop-down to timeKey={timeKey - 1}");
+
+                                if(timeKey == 0)
+                                {
+                                    accFreq[timeKey] = 0;
+                                    Logger.WriteDebug(DebugCategory.DETECTIONS_SEATBELT_FILEINFO, "HandleAccFreqMapUpdate", () => $"Reset timeKey={timeKey} to {accFreq[timeKey]}.");
+                                }
+
+                                Logger.WriteDebug(DebugCategory.DETECTIONS_SEATBELT_FILEINFO, "HandleAccFreqMapUpdate", () => $"Drop-down to timeKey={timeKey - 1}.");
                             }
                         }
                     }

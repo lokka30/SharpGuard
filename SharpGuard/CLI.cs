@@ -21,6 +21,14 @@ namespace SharpGuard
             Description = description;
             Aliases = aliases;
             Usage = usage;
+
+            foreach (var alias in Aliases) 
+            {
+                if (alias.Contains(' '))
+                {
+                    throw new ArgumentException("Aliases can't contain spaces.");
+                }
+            }
         }
 
         // Execute command with provided args
@@ -128,7 +136,7 @@ namespace SharpGuard
     {
         private static readonly string name = "(Debugging) Write Test Event";
         private static readonly string description = "Writes a test event to the Windows event log.";
-        private static readonly string[] aliases = { "debug-write-test-event" };
+        private static readonly string[] aliases = { "debug-write-test-event", "dbg-write-test-event" };
         private static readonly string usage = aliases.First();
         private SharpGuard SG { get; init; }
 
@@ -151,7 +159,7 @@ namespace SharpGuard
     {
         private static readonly string name = "Debug Category Management";
         private static readonly string description = "Check or manage enabled debug categories to be logged.";
-        private static readonly string[] aliases = { "debug-category" };
+        private static readonly string[] aliases = { "debug-category", "dbg-category", "debug-cat", "dbg-cat" };
         private static readonly string usage = $"{aliases.First()} <add / rm / ls>";
 
         public DebugCategoryCommand() : base(name, description, aliases, usage)

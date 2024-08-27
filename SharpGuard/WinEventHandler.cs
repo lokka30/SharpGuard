@@ -16,7 +16,6 @@ namespace SharpGuard
         DETECTIONS = 1,
     }
 
-    // TODO: Add debug logging to file.
     [SupportedOSPlatform("windows")]
     internal class WinEventHandler
     {
