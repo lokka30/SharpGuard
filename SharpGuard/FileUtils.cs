@@ -55,7 +55,7 @@ namespace SharpGuard
             watcher.IncludeSubdirectories = true;
             watcher.EnableRaisingEvents = true;
 
-            Logger.WriteDebug(DebugCategory.FileWatching, "FileUtils.Watch", () => $"Watching dir '{directoryPath}' with fileNameFilter '{fileNameFilter}' with handler method name '{handler.Method.Name}'.");
+            Logger.WriteDebug(DebugCategory.FILE_WATCHING, "FileUtils.Watch", () => $"Watching dir '{directoryPath}' with fileNameFilter '{fileNameFilter}' with handler method name '{handler.Method.Name}'.");
 
             return watcher;
         }

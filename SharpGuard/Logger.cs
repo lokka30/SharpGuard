@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -7,12 +8,7 @@ namespace SharpGuard
 {
     public class Logger
     {
-        public static ConcurrentBag<DebugCategory> EnabledDebugCategories { get; private set; } = new() {
-            DebugCategory.FileWatching,
-            DebugCategory.Detections,
-            // DebugCategory.Detections_Seatbelt_FileInfo,
-            DebugCategory.Uncategorised
-        };
+        public static ConcurrentDictionary<DebugCategory, bool> EnabledDebugCategories { get; private set; } = new();
 
         public static readonly object locker = new();
 
@@ -33,7 +29,7 @@ namespace SharpGuard
 
         public static void WriteDebug(DebugCategory category, string prefix, Func<string> msg, bool endl = true)
         {
-            if (!EnabledDebugCategories.Contains(category))
+            if (!EnabledDebugCategories.GetValueOrDefault(category, false))
             {
                 return;
             }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Versioning;
 
 namespace SharpGuard
@@ -33,29 +34,30 @@ namespace SharpGuard
             GuardCLI.Initialize("SharpGuard v0.1");
         }
 
-        void Stop()
+        public void Stop()
         {
             StopDetections();
+            Environment.Exit(0);
         }
 
         void StartDetections()
         {
-            Logger.WriteDebug(DebugCategory.Detections, "StartDetections", () => "Starting detections...");
+            Logger.WriteDebug(DebugCategory.DETECTIONS_GENERIC, "StartDetections", () => "Starting detections...");
             foreach (var dec in Detections)
             {
                 dec.Start(EventHandler);
             }
-            Logger.WriteDebug(DebugCategory.Detections, "StartDetections", () => $"Started {Detections.Count} detections.");
+            Logger.WriteDebug(DebugCategory.DETECTIONS_GENERIC, "StartDetections", () => $"Started {Detections.Count} detections.");
         }
 
         void StopDetections()
         {
-            Logger.WriteDebug(DebugCategory.Detections, "StopDetections", () => "Stopping detections...");
+            Logger.WriteDebug(DebugCategory.DETECTIONS_GENERIC, "StopDetections", () => "Stopping detections...");
             foreach (var dec in Detections)
             {
                 dec.Stop();
             }
-            Logger.WriteDebug(DebugCategory.Detections, "StopDetections", () => $"Stopped {Detections.Count} detections.");
+            Logger.WriteDebug(DebugCategory.DETECTIONS_GENERIC, "StopDetections", () => $"Stopped {Detections.Count} detections.");
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
