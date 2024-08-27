@@ -35,7 +35,7 @@ namespace SharpGuard
         public static readonly int millisPerBatch = 10_000; // time between batches being separated, milliseconds
         public static readonly int millisPerCheck = 05_000; // time between scheduled checks, milliseconds
         public static readonly int timeKeyLowerBound = -2; // lower bound for the time key; time keys lower than this are discarded
-        public static readonly int countTriggerBound = 7; // count # required to trigger alert
+        public static readonly int countTriggerBound = 8; // count # required to trigger alert
 
         private bool Enabled { get; set; } = false; // This keeps track if the detection has attempted to have been started twice in a row
 
