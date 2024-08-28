@@ -1,18 +1,19 @@
-﻿using SharpGuard.Log;
+﻿using SharpGuard.CLI.Cmd;
+using SharpGuard.Log;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 
-namespace SharpGuard.CLI.Cmd
+namespace SharpGuard.CLI
 {
 
     /// <summary>
     /// Houses most of the logic used in the SharpGuard CLI.
     /// </summary>
     [SupportedOSPlatform("windows")]
-    public class CLI
+    public class GuardCLI
     {
         /// <summary>
         /// Commands usable in the CLI.
@@ -28,7 +29,7 @@ namespace SharpGuard.CLI.Cmd
         /// Construct the CLI with the provided SharpGuard object ref
         /// </summary>
         /// <param name="sg">Reference to SharpGuard object</param>
-        public CLI(SharpGuard sg)
+        public GuardCLI(SharpGuard sg)
         {
             SG = sg;
             Commands.AddLast(new ExitCommand());

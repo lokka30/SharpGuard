@@ -7,24 +7,6 @@ namespace SharpGuard.Event
 {
 
     /// <summary>
-    /// Event IDs used by SharpGuard for Windows Event Logs
-    /// </summary>
-    public enum EventID : int
-    {
-        GENERIC = 0,
-        DETECTION_SEATBELT_FILEINFO = 1,
-    }
-
-    /// <summary>
-    /// Category IDs used by SharpGuard for Windows Event Logs
-    /// </summary>
-    public enum CategoryID : short
-    {
-        GENERIC = 0,
-        DETECTIONS = 1,
-    }
-
-    /// <summary>
     /// Contains various logic to handle Windows Event Logs
     /// </summary>
     [SupportedOSPlatform("windows")]

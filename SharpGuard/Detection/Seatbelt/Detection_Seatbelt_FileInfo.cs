@@ -7,6 +7,8 @@ namespace SharpGuard.Detection.Seatbelt
     /// <summary>
     /// Attempts to detect when Seatbelt's FileInfo command is ran with the <code>-full</code> parameter
     /// (no filter used). This is achieved by monitoring files of interest.
+    /// 
+    /// See also: https://raw.githubusercontent.com/GhostPack/Seatbelt/master/Seatbelt/Commands/Misc/FileInfoCommand.cs
     /// </summary>
     [SupportedOSPlatform("windows")]
     public class Detection_Seatbelt_FileInfo : Detection_FileAccessPattern
