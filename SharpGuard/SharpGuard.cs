@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
+using SharpGuard.Detection;
+using SharpGuard.Detection.Seatbelt;
+using SharpGuard.Event;
+using SharpGuard.Log;
 
 namespace SharpGuard
 {
     [SupportedOSPlatform("windows")]
-    internal class SharpGuard
+    public class SharpGuard
     {
 
         static void Main()
@@ -15,11 +19,11 @@ namespace SharpGuard
             instance.Stop();
         }
 
-        private readonly LinkedList<Detection> detections = new();
-        private LinkedList<Detection> Detections => detections;
+        private readonly LinkedList<Detection.Detection> detections = new();
+        private LinkedList<Detection.Detection> Detections => detections;
 
         public WinEventHandler EventHandler { get; init; } = new();
-        public CLI GuardCLI { get; init; }
+        public SharpGuard.CLI.Cmd.CLI GuardCLI { get; init; }
 
         public SharpGuard()
         {
@@ -45,7 +49,7 @@ namespace SharpGuard
             Logger.WriteDebug(DebugCategory.DETECTIONS_GENERIC, "StartDetections", () => "Starting detections...");
             foreach (var dec in Detections)
             {
-                dec.Start(EventHandler);
+                dec.Start();
             }
             Logger.WriteDebug(DebugCategory.DETECTIONS_GENERIC, "StartDetections", () => $"Started {Detections.Count} detections.");
         }
@@ -61,7 +65,7 @@ namespace SharpGuard
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
-        void OnDetect(DetectionInfo dinfo)
+        void OnDetect(Alert dinfo)
         {
             Logger.WriteWarn("OnDetect", $"Detection received! Details:\n{dinfo.ToReadableString()}");
         }
