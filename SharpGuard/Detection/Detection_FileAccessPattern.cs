@@ -1,4 +1,7 @@
-﻿using System;
+﻿using SharpGuard.Event;
+using SharpGuard.File;
+using SharpGuard.Log;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -6,9 +9,6 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
-using SharpGuard.Event;
-using SharpGuard.File;
-using SharpGuard.Log;
 
 namespace SharpGuard.Detection
 {
@@ -323,7 +323,7 @@ namespace SharpGuard.Detection
         /// </summary>
         public override void Stop()
         {
-            if(!Enabled)
+            if (!Enabled)
             {
                 Logger.WriteWarn("Detection-FileAccessPattern", "Detection is stopping without being fully enabled (unsafe state). Continuing anyways to cleanup.");
             }

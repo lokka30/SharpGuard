@@ -1,9 +1,9 @@
-﻿using System;
+﻿using SharpGuard.Log;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
-using SharpGuard.Log;
 
 namespace SharpGuard.CLI.Cmd
 {

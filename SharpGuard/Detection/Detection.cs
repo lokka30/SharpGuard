@@ -1,6 +1,6 @@
-﻿using System;
-using SharpGuard.Event;
+﻿using SharpGuard.Event;
 using SharpGuard.Log;
+using System;
 
 namespace SharpGuard.Detection
 {

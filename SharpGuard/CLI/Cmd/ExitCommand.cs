@@ -1,6 +1,6 @@
-﻿using System.Linq;
+﻿using SharpGuard.Log;
+using System.Linq;
 using System.Runtime.Versioning;
-using SharpGuard.Log;
 
 namespace SharpGuard.CLI.Cmd
 {

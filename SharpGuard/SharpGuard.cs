@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Versioning;
-using SharpGuard.Detection;
+﻿using SharpGuard.Detection;
 using SharpGuard.Detection.Seatbelt;
 using SharpGuard.Event;
 using SharpGuard.Log;
+using System;
+using System.Collections.Generic;
+using System.Runtime.Versioning;
 
 namespace SharpGuard
 {
